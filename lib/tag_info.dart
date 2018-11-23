@@ -23,6 +23,7 @@ class TagInfoPageState extends State<TagInfo> {
   String _wood;
   String _design;
   String _size;
+  BuildContext _ctx;
 
   bool _formWasEdited = false;
   bool _isLoading = false;
@@ -59,15 +60,13 @@ class TagInfoPageState extends State<TagInfo> {
           'wood': _wood
         };
 
-      _createOrder(_contactNumber,_design,_dogName,_phoneNumber,_shippingAddress,_size,_wood, context);
+      _createOrder(_dogName,_phoneNumber,_shippingAddress,_contactNumber,_wood,_design,_size, context);
       print(data);
       return data;
-    
-
   }
 
   void _showSnackBar(String text, BuildContext context) {
-    Scaffold.of(context).showSnackBar(SnackBar(content: new Text(text)));
+    Scaffold.of(_ctx).showSnackBar(SnackBar(content: new Text(text)));
   }
 
   @override
@@ -94,7 +93,10 @@ class TagInfoPageState extends State<TagInfo> {
       appBar: AppBar(
         title: Text('Add Tag Info'),
       ),
-      body: Padding(
+      body: Builder (
+        builder: (BuildContext context) {
+        _ctx = context;
+        return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: formKey,
@@ -171,7 +173,8 @@ class TagInfoPageState extends State<TagInfo> {
             ],
           ),
         ),
-      ),
+        );
+      }
+      )
     );
-  }
-}
+}}
