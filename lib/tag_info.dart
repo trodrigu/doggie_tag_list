@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:doggie_tag_list/rest_ds.dart';
 import 'package:doggie_tag_list/models/order.dart';
+import 'package:doggie_tag_list/auth.dart';
 
 class TagInfo extends StatefulWidget {
 
@@ -11,7 +12,8 @@ class TagInfo extends StatefulWidget {
   TagInfoPageState createState() => TagInfoPageState();
 }
 
-class TagInfoPageState extends State<TagInfo> {
+class TagInfoPageState extends State<TagInfo> 
+  implements AuthStateListener {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
@@ -24,9 +26,17 @@ class TagInfoPageState extends State<TagInfo> {
   String _design;
   String _size;
   BuildContext _ctx;
+  AuthStateProvider _authStateProvider;
 
   bool _formWasEdited = false;
   bool _isLoading = false;
+
+  @override
+  onAuthStateChanged(AuthState state) {
+   
+    if(state == AuthState.LOGGED_OUT)
+      Navigator.of(_ctx).pushReplacementNamed("/login");
+  }
 
   void _submit(BuildContext context) {
     final form = formKey.currentState;
@@ -34,6 +44,7 @@ class TagInfoPageState extends State<TagInfo> {
     if (form.validate()) {
       form.save();
       _performSave(context);
+      form.reset();
       print('yay');
 
     } else {
@@ -81,6 +92,18 @@ class TagInfoPageState extends State<TagInfo> {
     setState(() => _isLoading = false);
   }
 
+  @mustCallSuper
+  @override
+  void initState() {
+      _authStateProvider = new AuthStateProvider();
+      _authStateProvider.subscribe(this);
+  }
+
+  void authOut() async {
+    _authStateProvider.rmMobileToken();
+    _authStateProvider.notify(AuthState.LOGGED_OUT);
+  }
+
   @override
   Widget build(BuildContext context) {
     var submitBtn =
@@ -92,6 +115,17 @@ class TagInfoPageState extends State<TagInfo> {
       key: scaffoldKey,
       appBar: AppBar(
         title: Text('Add Tag Info'),
+      ),
+      drawer: new Drawer(
+        child: new ListView(
+          children: <Widget> [
+            new DrawerHeader(child: new Text('Menu'),),
+            new ListTile(
+              title: new Text('Logout'),
+              onTap: () => authOut()
+            )
+          ],
+        )
       ),
       body: Builder (
         builder: (BuildContext context) {

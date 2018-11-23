@@ -35,6 +35,14 @@ class AuthStateProvider {
   }
 
   /// ----------------------------------------------------------
+  /// Method that removes the token in Shared Preferences
+  /// ----------------------------------------------------------
+  Future<bool> rmMobileToken() async {
+    final SharedPreferences prefs = await _prefs;
+    return prefs.remove("token");
+  }
+
+  /// ----------------------------------------------------------
   /// Method that saves the token in Shared Preferences
   /// ----------------------------------------------------------
   Future<bool> setMobileToken(String token) async {
