@@ -1,12 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:doggie_tag_list/rest_ds.dart';
+import 'package:doggie_tag_list/models/order.dart';
 
 class TagInfo extends StatefulWidget {
+
   @override
   TagInfoPageState createState() => TagInfoPageState();
 }
 
 class TagInfoPageState extends State<TagInfo> {
+
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
 
@@ -19,34 +25,70 @@ class TagInfoPageState extends State<TagInfo> {
   String _size;
 
   bool _formWasEdited = false;
+  bool _isLoading = false;
 
-  final _UsNumberTextInputFormatter _phoneNumberFormatter = new _UsNumberTextInputFormatter();
-
-  String _validatePhoneNumber(String value) {
-    _formWasEdited = true;
-    final RegExp phoneExp = new RegExp(r'^\(\d\d\d\) \d\d\d\-\d\d\d\d$');
-    if (!phoneExp.hasMatch(value))
-      return '(###) ###-#### - Enter a US phone number.';
-    return null;
-  }
-
-  void _submit() {
+  void _submit(BuildContext context) {
     final form = formKey.currentState;
 
     if (form.validate()) {
       form.save();
-      _performSave;
+      _performSave(context);
+      print('yay');
 
+    } else {
+      print('oops');
     }
   }
 
-  void _performSave() async {
-    final snackbar = SnackBar(content: Text('Saved!'));
-    scaffoldKey.currentState.showSnackBar(snackbar);
+  _createOrder(String _dogName, String _phoneNumber, String _shippingAddress, String _contactNumber, String _wood, String _design, String _size, BuildContext context) {
+    RestDatasource api = new RestDatasource();
+    api.createOrder(_dogName, _phoneNumber, _shippingAddress, _contactNumber, _wood, _design, _size).then((Order order) {
+      onOrderSuccess(order, context);
+    }).catchError((Exception error) => onOrderError(error.toString(), context));
+  }
+
+  Future<dynamic> _performSave(BuildContext context) async {
+      final Map<String, dynamic> data = 
+        {
+          'contactNumber': _contactNumber,
+          'design': _design,
+          'dogName': _dogName,
+          'phoneNumber': _phoneNumber,
+          'shippingAddress': _shippingAddress,
+          'size': _size,
+          'wood': _wood
+        };
+
+      _createOrder(_contactNumber,_design,_dogName,_phoneNumber,_shippingAddress,_size,_wood, context);
+      print(data);
+      return data;
+    
+
+  }
+
+  void _showSnackBar(String text, BuildContext context) {
+    Scaffold.of(context).showSnackBar(SnackBar(content: new Text(text)));
+  }
+
+  @override
+  void onOrderError(String errorTxt, BuildContext context) {
+    _showSnackBar(errorTxt, context);
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  void onOrderSuccess(Order order, BuildContext context) async {
+    _showSnackBar("Thank you!", context);
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    var submitBtn =
+              RaisedButton(
+                onPressed: () => _submit(context),
+                child: Text('Get Tag!'),
+              );
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -69,14 +111,9 @@ class TagInfoPageState extends State<TagInfo> {
               new ListTile(
                 leading:  const Icon(Icons.phone),
                 title: TextFormField(
-                  decoration: InputDecoration(labelText: 'Phone Number'),
+                  decoration: InputDecoration(labelText: 'Phone Number On Tag'),
                   onSaved: (val) => _phoneNumber = val,
                   keyboardType: TextInputType.phone,
-                  validator: _validatePhoneNumber,
-                  inputFormatters: [
-                    WhitelistingTextInputFormatter.digitsOnly,
-                    _phoneNumberFormatter
-                  ]
                 )
               ),
               new ListTile(
@@ -89,7 +126,7 @@ class TagInfoPageState extends State<TagInfo> {
               ListTile(
                 leading: const Icon(Icons.phone_iphone),
                 title: TextFormField(
-                  decoration: InputDecoration(labelText: 'Contact Number'),
+                  decoration: InputDecoration(labelText: 'Good Contact Number For You'),
                   onSaved: (val) => _contactNumber = val,
                 ),
               ),
@@ -130,55 +167,11 @@ class TagInfoPageState extends State<TagInfo> {
                   setState(() { _size = newValue; });
                 }
               ),
-              RaisedButton(
-                onPressed: _submit,
-                child: Text('Get Tag!'),
-              ),
+              _isLoading ? new CircularProgressIndicator() : submitBtn
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Format incoming numeric text to fit the format of (###) ###-#### ##...
-class _UsNumberTextInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue
-  ) {
-    final int newTextLength = newValue.text.length;
-    int selectionIndex = newValue.selection.end;
-    int usedSubstringIndex = 0;
-    final StringBuffer newText = new StringBuffer();
-    if (newTextLength >= 1) {
-      newText.write('(');
-      if (newValue.selection.end >= 1)
-        selectionIndex++;
-    }
-    if (newTextLength >= 4) {
-      newText.write(newValue.text.substring(0, usedSubstringIndex = 3) + ') ');
-      if (newValue.selection.end >= 3)
-        selectionIndex += 2;
-    }
-    if (newTextLength >= 7) {
-      newText.write(newValue.text.substring(3, usedSubstringIndex = 6) + '-');
-      if (newValue.selection.end >= 6)
-        selectionIndex++;
-    }
-    if (newTextLength >= 11) {
-      newText.write(newValue.text.substring(6, usedSubstringIndex = 10) + ' ');
-      if (newValue.selection.end >= 10)
-        selectionIndex++;
-    }
-    // Dump the rest.
-    if (newTextLength >= usedSubstringIndex)
-      newText.write(newValue.text.substring(usedSubstringIndex));
-    return new TextEditingValue(
-      text: newText.toString(),
-      selection: new TextSelection.collapsed(offset: selectionIndex),
     );
   }
 }
