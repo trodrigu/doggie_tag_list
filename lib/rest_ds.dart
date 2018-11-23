@@ -27,15 +27,15 @@ class RestDatasource {
 
   Future<Order> createOrder(String _dogName, String _phoneNumber, String _shippingAddress, String _contactNumber, String _wood, String _design, String _size) {
     return client.post('http://localhost:4000/api/orders', body: {
-      "dogName": _dogName,
-      "phoneNumber": _phoneNumber,
-      "shippingAddress": _shippingAddress,
-      "contactNumber": _contactNumber,
+      "dog_name": _dogName,
+      "phone_number": _phoneNumber,
+      "shipping_address": _shippingAddress,
+      "contact_number": _contactNumber,
       "wood": _wood,
       "design": _design,
       "size": _size
     }).then((dynamic res) {
-      _order = new Order.map(res["order"]);
+      _order = new Order.map(res);
       return _order;
     });
   }
