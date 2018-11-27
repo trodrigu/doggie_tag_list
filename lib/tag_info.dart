@@ -4,7 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:doggie_tag_list/rest_ds.dart';
 import 'package:doggie_tag_list/models/order.dart';
+import 'package:doggie_tag_list/models/ordersList.dart';
 import 'package:doggie_tag_list/auth.dart';
+import 'package:doggie_tag_list/home.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:pref_dessert/pref_dessert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class TagInfo extends StatefulWidget {
 
@@ -14,6 +20,9 @@ class TagInfo extends StatefulWidget {
 
 class TagInfoPageState extends State<TagInfo> 
   implements AuthStateListener {
+  String _connectionStatus = 'Unknown';
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
@@ -45,10 +54,24 @@ class TagInfoPageState extends State<TagInfo>
       form.save();
       _performSave(context);
       form.reset();
-      print('yay');
+      print('yay online');
 
     } else {
-      print('oops');
+      print('oops online');
+    }
+  }
+
+  void _submitOffline(BuildContext context) {
+    final form = formKey.currentState;
+
+    if (form.validate()) {
+      form.save();
+      _performSaveOffline(context);
+      form.reset();
+      print('yay offline');
+
+    } else {
+      print('oops offline');
     }
   }
 
@@ -57,6 +80,23 @@ class TagInfoPageState extends State<TagInfo>
     api.createOrder(_dogName, _phoneNumber, _shippingAddress, _contactNumber, _wood, _design, _size).then((Order order) {
       onOrderSuccess(order, context);
     }).catchError((Exception error) => onOrderError(error.toString(), context));
+  }
+
+  Future<dynamic> _performSaveOffline(BuildContext context) async {
+    var repo = FuturePreferencesRepository<OrdersList>(new OrdersDesSer());
+    var list = repo.findAll();
+    print(list);
+    repo.save(OrdersList.map([]));
+  }
+
+  Future<String> getOrdersList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('Orders');
+  }
+
+  Future<bool> setOrdersList(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString('Orders', value);
   }
 
   Future<dynamic> _performSave(BuildContext context) async {
@@ -91,24 +131,58 @@ class TagInfoPageState extends State<TagInfo>
     _showSnackBar("Thank you!", context);
     setState(() => _isLoading = false);
   }
+  
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
 
   @mustCallSuper
   @override
   void initState() {
+      super.initState();
       _authStateProvider = new AuthStateProvider();
       _authStateProvider.subscribe(this);
+      initConnectivity();
+      _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
+          setState(() => _connectionStatus = result.toString());
+        });
+  }
+
+  // initialize some async messages for connectivity
+  Future<Null> initConnectivity() async {
+    String connectionStatus;
+    try {
+      connectionStatus = (await _connectivity.checkConnectivity()).toString();
+    } on PlatformException catch (e) {
+      print(e.toString());
+      connectionStatus = 'Failed to get connectivity!';
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(
+      () {
+      _connectionStatus = connectionStatus;
+    });
   }
 
   void authOut() async {
     _authStateProvider.rmMobileToken();
     _authStateProvider.notify(AuthState.LOGGED_OUT);
+    _authStateProvider.disposeAll();
   }
 
   @override
   Widget build(BuildContext context) {
+    print(_connectionStatus);
     var submitBtn =
               RaisedButton(
-                onPressed: () => _submit(context),
+                onPressed: () => (_connectionStatus == 'ConnectivityResult.wifi' ? _submit(context) : _submitOffline(context)),
                 child: Text('Get Tag!'),
               );
     return Scaffold(
@@ -212,3 +286,22 @@ class TagInfoPageState extends State<TagInfo>
       )
     );
 }}
+
+class OrdersDesSer extends DesSer<OrdersList>{
+  @override
+  OrdersList deserialize(String s) {
+    // "[{tom,dude,234234,jkl},{man,bro,23432,sdf}]"
+    var orders = s.split(new RegExp(r"{"));
+    print(orders);
+    //return new OrdersList(split);
+    return OrdersList.map([]);
+  }
+
+  @override
+  String serialize(OrdersList o) {
+    return "[]";
+  }
+
+  @override
+  String get key => "Orders";
+}

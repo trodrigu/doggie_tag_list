@@ -1,20 +1,33 @@
 PODS:
+  - connectivity (0.0.1):
+    - Flutter
+    - Reachability
   - Flutter (1.0.0)
+  - Reachability (3.2)
   - shared_preferences (0.0.1):
     - Flutter
 
 DEPENDENCIES:
+  - connectivity (from `Pods/.symlinks/plugins/connectivity/ios`)
   - Flutter (from `Pods/.symlinks/flutter/ios`)
   - shared_preferences (from `Pods/.symlinks/plugins/shared_preferences/ios`)
 
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - Reachability
+
 EXTERNAL SOURCES:
+  connectivity:
+    :path: Pods/.symlinks/plugins/connectivity/ios
   Flutter:
     :path: Pods/.symlinks/flutter/ios
   shared_preferences:
     :path: Pods/.symlinks/plugins/shared_preferences/ios
 
 SPEC CHECKSUMS:
+  connectivity: d5992e3758d68b1c4b12d6e012fe0813f1aa1645
   Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
+  Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
   shared_preferences: 5a1d487c427ee18fcd3ea1f2a131569481834b53
 
 PODFILE CHECKSUM: 13dcf421f4da2e937a57e8ba760ed880beae536f

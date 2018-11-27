@@ -67,10 +67,11 @@ class AuthStateProvider {
   }
 
   void dispose(AuthStateListener listener) {
-    for(var l in _subscribers) {
-      if(l == listener)
-         _subscribers.remove(l);
-    }
+    _subscribers.remove(listener);
+  }
+
+  void disposeAll() {
+    _subscribers = [];
   }
 
   void notify(AuthState state) {
