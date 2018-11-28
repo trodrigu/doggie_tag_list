@@ -18,7 +18,7 @@ class TagInfo extends StatefulWidget {
   TagInfoPageState createState() => TagInfoPageState();
 }
 
-class TagInfoPageState extends State<TagInfo> 
+class TagInfoPageState extends State<TagInfo>
   implements AuthStateListener {
   String _connectionStatus = 'Unknown';
   final Connectivity _connectivity = Connectivity();
@@ -42,9 +42,6 @@ class TagInfoPageState extends State<TagInfo>
 
   @override
   onAuthStateChanged(AuthState state) {
-   
-    if(state == AuthState.LOGGED_OUT)
-      Navigator.of(_ctx).pushReplacementNamed("/login");
   }
 
   void _submit(BuildContext context) {
@@ -83,10 +80,8 @@ class TagInfoPageState extends State<TagInfo>
   }
 
   Future<dynamic> _performSaveOffline(BuildContext context) async {
-    var repo = FuturePreferencesRepository<OrdersList>(new OrdersDesSer());
-    var list = repo.findAll();
-    print(list);
-    repo.save(OrdersList.map([]));
+    var repo = FuturePreferencesRepository<Order>(new OrderDesSer());
+    repo.save(Order(_dogName,_phoneNumber,_shippingAddress,_contactNumber,_wood,_design,_size));
   }
 
   Future<String> getOrdersList() async {
@@ -100,7 +95,7 @@ class TagInfoPageState extends State<TagInfo>
   }
 
   Future<dynamic> _performSave(BuildContext context) async {
-      final Map<String, dynamic> data = 
+      final Map<String, dynamic> data =
         {
           'contactNumber': _contactNumber,
           'design': _design,
@@ -131,7 +126,7 @@ class TagInfoPageState extends State<TagInfo>
     _showSnackBar("Thank you!", context);
     setState(() => _isLoading = false);
   }
-  
+
   @override
   void dispose() {
     _connectivitySubscription.cancel();
@@ -172,6 +167,7 @@ class TagInfoPageState extends State<TagInfo>
   }
 
   void authOut() async {
+    Navigator.of(_ctx).pushReplacementNamed("/login");
     _authStateProvider.rmMobileToken();
     _authStateProvider.notify(AuthState.LOGGED_OUT);
     _authStateProvider.disposeAll();
@@ -195,9 +191,13 @@ class TagInfoPageState extends State<TagInfo>
           children: <Widget> [
             new DrawerHeader(child: new Text('Menu'),),
             new ListTile(
+              title: new Text('Orders'),
+              onTap: () => Navigator.of(_ctx).pushReplacementNamed("/orders")
+            ),
+            new ListTile(
               title: new Text('Logout'),
               onTap: () => authOut()
-            )
+            ),
           ],
         )
       ),
@@ -287,21 +287,28 @@ class TagInfoPageState extends State<TagInfo>
     );
 }}
 
-class OrdersDesSer extends DesSer<OrdersList>{
+class OrderDesSer extends DesSer<Order>{
   @override
-  OrdersList deserialize(String s) {
-    // "[{tom,dude,234234,jkl},{man,bro,23432,sdf}]"
-    var orders = s.split(new RegExp(r"{"));
-    print(orders);
-    //return new OrdersList(split);
-    return OrdersList.map([]);
+  Order deserialize(String s) {
+    if (s == "[]") {
+      return new Order("","","","","","","");
+    } else {
+      var split = s.split(",");
+      return new Order(split[0],
+                      split[1],
+                      split[2],
+                      split[3],
+                      split[4],
+                      split[5],
+                      split[6]);
+    }
   }
 
   @override
-  String serialize(OrdersList o) {
-    return "[]";
+  String serialize(Order t) {
+    return "${t.dogName},${t.phoneNumber},${t.shippingAddress},${t.contactNumber},${t.wood},${t.design},${t.size}";
   }
 
   @override
-  String get key => "Orders";
+  String get key => "Order";
 }
