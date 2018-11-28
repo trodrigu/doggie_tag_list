@@ -1,12 +1,8 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:doggie_tag_list/utils/network_util.dart';
 import 'package:doggie_tag_list/models/user.dart';
 import 'package:doggie_tag_list/models/order.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class RestDatasource {
   String _token;
@@ -39,4 +35,13 @@ class RestDatasource {
       return _order;
     });
   }
+
+  Future<List<Order>> getOrders() {
+    return client.get(http://localhost:4000/api/orders').then((dynamic res) {
+      res.map(
+        (dynamic order) => order
+      );
+    }
+    );
+    }
 }
