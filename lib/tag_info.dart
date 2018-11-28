@@ -36,6 +36,20 @@ class TagInfoPageState extends State<TagInfo>
   String _size;
   BuildContext _ctx;
   AuthStateProvider _authStateProvider;
+  var _dogNameController = TextEditingController();
+  var _phoneNumberController = TextEditingController();
+  var _shippingAddressController = TextEditingController();
+  var _contactNumberController = TextEditingController();
+  var _woodController = TextEditingController();
+  var _designController = TextEditingController();
+  var _sizeController = TextEditingController();
+  final FocusNode _dogNameFocus = FocusNode();
+  final FocusNode _phoneNumberFocus = FocusNode();
+  final FocusNode _shippingAddressFocus = FocusNode();
+  final FocusNode _contactNumberFocus = FocusNode();
+  final FocusNode _woodFocus = FocusNode();
+  final FocusNode _designFocus = FocusNode();
+  final FocusNode _sizeFocus = FocusNode();
 
   bool _formWasEdited = false;
   bool _isLoading = false;
@@ -173,6 +187,11 @@ class TagInfoPageState extends State<TagInfo>
     _authStateProvider.disposeAll();
   }
 
+  _fieldFocusChange(BuildContext context, FocusNode from, FocusNode to){
+    from.unfocus();
+    FocusScope.of(context).requestFocus(to);
+  }
+
   @override
   Widget build(BuildContext context) {
     print(_connectionStatus);
@@ -181,6 +200,7 @@ class TagInfoPageState extends State<TagInfo>
                 onPressed: () => (_connectionStatus == 'ConnectivityResult.wifi' ? _submit(context) : _submitOffline(context)),
                 child: Text('Get Tag!'),
               );
+
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -214,6 +234,12 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading:  const Icon(Icons.pets),
                 title: TextFormField(
+                  controller: _dogNameController,
+                  textInputAction:  TextInputAction.next,
+                  focusNode: _dogNameFocus,
+                  onFieldSubmitted: (term){
+                    _fieldFocusChange(context, _dogNameFocus, _phoneNumberFocus);
+                  },
                   decoration: InputDecoration(labelText: 'Dog\'s Name'),
                   onSaved: (val) => _dogName = val,
                 )
@@ -221,6 +247,12 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading:  const Icon(Icons.phone),
                 title: TextFormField(
+                  controller: _phoneNumberController,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _phoneNumberFocus,
+                  onFieldSubmitted: (term){
+                    _fieldFocusChange(context, _phoneNumberFocus, _shippingAddressFocus);
+                  },
                   decoration: InputDecoration(labelText: 'Phone Number On Tag'),
                   onSaved: (val) => _phoneNumber = val,
                   keyboardType: TextInputType.phone,
@@ -229,6 +261,12 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading: const Icon(Icons.local_shipping),
                 title: TextFormField(
+                  controller: _shippingAddressController,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _shippingAddressFocus,
+                  onFieldSubmitted: (term){
+                    _fieldFocusChange(context, _shippingAddressFocus, _contactNumberFocus);
+                  },
                   decoration: InputDecoration(labelText: 'Shipping Address'),
                   onSaved: (val) => _shippingAddress = val,
                 ),
@@ -236,6 +274,12 @@ class TagInfoPageState extends State<TagInfo>
               ListTile(
                 leading: const Icon(Icons.phone_iphone),
                 title: TextFormField(
+                  controller: _contactNumberController,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _contactNumberFocus,
+                  onFieldSubmitted: (term){
+                    _contactNumberFocus.unfocus();
+                  },
                   decoration: InputDecoration(labelText: 'Good Contact Number For You'),
                   onSaved: (val) => _contactNumber = val,
                 ),
@@ -283,7 +327,8 @@ class TagInfoPageState extends State<TagInfo>
         ),
         );
       }
-      )
+      ),
+      resizeToAvoidBottomPadding: false,
     );
 }}
 
