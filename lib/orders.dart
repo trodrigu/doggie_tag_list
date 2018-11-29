@@ -12,6 +12,7 @@ import 'package:pref_dessert/pref_dessert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 
 class Orders extends StatefulWidget {
   @override
@@ -81,7 +82,8 @@ class OrdersState extends State<Orders>
   }
 
   Future<List<Order>> _getOrders(http.Client client) async {
-    final response = await client.get('http://d05c2101.ngrok.io/api/orders/');
+    String token = await _authStateProvider.getMobileToken();
+    final response = await client.get('http://localhost:4000/api/orders/', headers: {HttpHeaders.authorizationHeader: ("Bearer " + token)});
     return parseOrders(response.body);
   }
 

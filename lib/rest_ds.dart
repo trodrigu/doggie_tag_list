@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:doggie_tag_list/utils/network_util.dart';
 import 'package:doggie_tag_list/models/user.dart';
 import 'package:doggie_tag_list/models/order.dart';
+import 'package:doggie_tag_list/auth.dart';
+import 'dart:io';
 
 class RestDatasource {
   String _token;
@@ -21,7 +23,8 @@ class RestDatasource {
     });
   }
 
-  Future<Order> createOrder(String _dogName, String _phoneNumber, String _shippingAddress, String _contactNumber, String _wood, String _design, String _size) {
+  Future<Order> createOrder(String _dogName, String _phoneNumber, String _shippingAddress, String _contactNumber, String _wood, String _design, String _size, AuthStateProvider auth) async {
+    String token = await auth.getMobileToken();
     return client.post('http://localhost:4000/api/orders', body: {
       "dog_name": _dogName,
       "phone_number": _phoneNumber,
@@ -30,18 +33,19 @@ class RestDatasource {
       "wood": _wood,
       "design": _design,
       "size": _size
-    }).then((dynamic res) {
+    }, 
+    headers: {HttpHeaders.authorizationHeader: ("Bearer " + token)}
+    ).then((dynamic res) {
       _order = new Order.map(res);
       return _order;
     });
   }
 
   Future<List<Order>> getOrders() {
-    return client.get(http://localhost:4000/api/orders').then((dynamic res) {
+    return client.get('http://localhost:4000/api/orders').then((dynamic res) {
       res.map(
         (dynamic order) => order
       );
-    }
-    );
-    }
+    });
+  }
 }

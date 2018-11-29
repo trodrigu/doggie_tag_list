@@ -18,9 +18,9 @@ class Client {
     });
   }
 
-  Future<dynamic> post(String url, {Map body}) {
+  Future<dynamic> post(String url, {Map<String, String> body, headers}) {
     return _inner
-        .post(url, body: body)
+        .post(url, body: body, headers: headers)
         .then((http.Response response) {
       final String res = response.body;
       final int statusCode = response.statusCode;

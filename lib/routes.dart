@@ -7,5 +7,5 @@ final routes = {
   '/orders': (BuildContext context) => new Orders(),
   '/login': (BuildContext context) => new Home(),
   '/tag_info': (BuildContext context) => new TagInfo(),
-  '/' : (BuildContext context) => new Home(),
+  '/' : (BuildContext context) => new TagInfo(),
 };
