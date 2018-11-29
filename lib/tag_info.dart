@@ -36,13 +36,6 @@ class TagInfoPageState extends State<TagInfo>
   String _size;
   BuildContext _ctx;
   AuthStateProvider _authStateProvider;
-  var _dogNameController = TextEditingController();
-  var _phoneNumberController = TextEditingController();
-  var _shippingAddressController = TextEditingController();
-  var _contactNumberController = TextEditingController();
-  var _woodController = TextEditingController();
-  var _designController = TextEditingController();
-  var _sizeController = TextEditingController();
   final FocusNode _dogNameFocus = FocusNode();
   final FocusNode _phoneNumberFocus = FocusNode();
   final FocusNode _shippingAddressFocus = FocusNode();
@@ -65,8 +58,11 @@ class TagInfoPageState extends State<TagInfo>
       form.save();
       _performSave(context);
       form.reset();
-      print('yay online');
-
+      setState(() {
+        _wood = null;
+        _design = null;
+        _size = null;
+      });
     } else {
       print('oops online');
     }
@@ -79,6 +75,11 @@ class TagInfoPageState extends State<TagInfo>
       form.save();
       _performSaveOffline(context);
       form.reset();
+      setState(() {
+        _wood = null;
+        _design = null;
+        _size = null;
+      });
       print('yay offline');
 
     } else {
@@ -234,7 +235,6 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading:  const Icon(Icons.pets),
                 title: TextFormField(
-                  controller: _dogNameController,
                   textInputAction:  TextInputAction.next,
                   focusNode: _dogNameFocus,
                   onFieldSubmitted: (term){
@@ -247,7 +247,6 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading:  const Icon(Icons.phone),
                 title: TextFormField(
-                  controller: _phoneNumberController,
                   textInputAction: TextInputAction.next,
                   focusNode: _phoneNumberFocus,
                   onFieldSubmitted: (term){
@@ -261,7 +260,6 @@ class TagInfoPageState extends State<TagInfo>
               new ListTile(
                 leading: const Icon(Icons.local_shipping),
                 title: TextFormField(
-                  controller: _shippingAddressController,
                   textInputAction: TextInputAction.next,
                   focusNode: _shippingAddressFocus,
                   onFieldSubmitted: (term){
@@ -274,7 +272,6 @@ class TagInfoPageState extends State<TagInfo>
               ListTile(
                 leading: const Icon(Icons.phone_iphone),
                 title: TextFormField(
-                  controller: _contactNumberController,
                   textInputAction: TextInputAction.next,
                   focusNode: _contactNumberFocus,
                   onFieldSubmitted: (term){
