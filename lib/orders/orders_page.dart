@@ -2,49 +2,49 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:doggie_tag_list/rest_ds.dart';
 import 'package:doggie_tag_list/models/order.dart';
-import 'package:doggie_tag_list/models/ordersList.dart';
 import 'package:doggie_tag_list/auth.dart';
-import 'package:doggie_tag_list/home.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:pref_dessert/pref_dessert.dart';
+import 'package:doggie_tag_list/authentication/authentication.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'orders.dart';
 
-class Orders extends StatefulWidget {
+class OrdersPage extends StatefulWidget {
+  final AuthenticationBloc _authBloc = AuthenticationBloc();
+
   @override
-  OrdersState createState() => OrdersState();
+  OrdersWidgetState createState() => OrdersWidgetState(authBloc: _authBloc);
 }
 
-class OrdersState extends State<Orders>
-  implements AuthStateListener {
+class OrdersWidgetState extends State<OrdersPage>
+  {
   String _connectionStatus = 'Unknown';
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  final OrdersBloc _ordersBloc = OrdersBloc(restDs: new RestDatasource());
+  final AuthenticationBloc _authBloc;
 
   BuildContext _ctx;
   AuthStateProvider _authStateProvider;
 
-  
-  @override
-  onAuthStateChanged(AuthState state) {
-  }
+  OrdersWidgetState({
+    @required AuthenticationBloc authBloc
+  }) : _authBloc = authBloc;
 
   @override
   void initState() {
     super.initState();
-    _authStateProvider = new AuthStateProvider();
-    _authStateProvider.subscribe(this);
     initConnectivity();
     _connectivitySubscription =
       _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
         setState(() => _connectionStatus = result.toString());
         });
-
-    print('ya');
   }
 
   // initialize some async messages for connectivity
@@ -81,47 +81,88 @@ class OrdersState extends State<Orders>
     return parsed.map<Order>((json) => Order.map(json)).toList();
   }
 
-  Future<List<Order>> _getOrders(http.Client client) async {
-    String token = await _authStateProvider.getMobileToken();
-    final response = await client.get('http://localhost:4000/api/orders/', headers: {HttpHeaders.authorizationHeader: ("Bearer " + token)});
-    return parseOrders(response.body);
+  void showMeASnack(BuildContext context, Order order) {
+    String orderAsString =
+      """
+      Dog Name: ${order.dogName}
+      Phone Number: ${order.phoneNumber}
+      Shipping Address: ${order.shippingAddress}
+      Contact Number: ${order.contactNumber}
+      Wood: ${order.wood}
+      Design: ${order.design}
+      Size: ${order.size}
+      """;
+    Scaffold
+        .of(context)
+        .showSnackBar(new SnackBar(content: new Text(orderAsString)));
   }
+
+  void _onWidgetDidBuild(Function callback) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      callback();
+    });
+  }
+
+  bool _showOrder(OrdersState state) => state.order != null;
 
   @override
   Widget build(BuildContext context) {
-    print(_connectionStatus);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Orders'),
-        ),
-      drawer: new Drawer(
-        child: new ListView(
-          children: <Widget> [
-            new DrawerHeader(child: new Text('Menu'),),
-            new ListTile(
-              title: new Text('Tag Info'),
-              onTap: () => Navigator.of(_ctx).pushReplacementNamed("/tag_info")
+    return BlocBuilder<OrdersEvent, OrdersState>(
+      bloc: _ordersBloc,
+      builder: (
+        BuildContext context,
+        OrdersState ordersState
+      ) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Orders'),
             ),
-            new ListTile(
-              title: new Text('Logout'),
-              onTap: () => authOut()
-            ),
-          ],
-        )
-      ),
-      body: FutureBuilder<List<Order>>(
-        future: _getOrders(http.Client()),
-        builder: (BuildContext context, snapshot) {
-          _ctx = context;
-          if (snapshot.hasError) {
+          drawer: new Drawer(
+            child: new ListView(
+              children: <Widget> [
+                new DrawerHeader(child: new Text('Menu'),),
+                new ListTile(
+                  title: new Text('Tag Info'),
+                  onTap: () => Navigator.of(_ctx).pushReplacementNamed("/tag_info")
+                ),
+                new ListTile(
+                  title: new Text('Logout'),
+                  onTap: () => _authBloc.onLogout()
+                ),
+              ],
+            )
+          ),
+          body: FutureBuilder<List<Order>>(
+            future: _ordersBloc.getOrders(),
+            builder: (BuildContext context, snapshot) {
+              _ctx = context;
+              if (_showOrder(ordersState)) {
+                _onWidgetDidBuild(() {
+                  showMeASnack(_ctx, ordersState.order);
+                });
+                _ordersBloc.resetSnack();
+              }
 
-          }
-          return snapshot.hasData
-            ? ListViewOrders(orders: snapshot.data)
-            : new CircularProgressIndicator();
-        },)
+              if (snapshot != null) {
+                if (snapshot.hasError) {
+
+                }
+                return snapshot.hasData
+                  ? ListViewOrders(
+                      orders: snapshot.data,
+                      ordersBloc: _ordersBloc)
+                  : new CircularProgressIndicator();
+              }
+            },)
+        );
+        }
     );
+  }
+
+  @override
+  void dispose() {
+    _ordersBloc.dispose();
+    super.dispose();
   }
 }
 
@@ -153,24 +194,9 @@ class OrderDesSer extends DesSer<Order>{
 
 class ListViewOrders extends StatelessWidget {
   final List<Order> orders;
+  final OrdersBloc ordersBloc;
 
-  ListViewOrders({Key key, this.orders}) : super(key: key);
-
-  void _onTapItem(BuildContext context, Order order) {
-    String orderAsString =
-      """
-      Dog Name: ${order.dogName}
-      Phone Number: ${order.phoneNumber}
-      Shipping Address: ${order.shippingAddress}
-      Contact Number: ${order.contactNumber}
-      Wood: ${order.wood}
-      Design: ${order.design}
-      Size: ${order.size}
-      """;
-    Scaffold
-        .of(context)
-        .showSnackBar(new SnackBar(content: new Text(orderAsString)));
-  }
+  ListViewOrders({Key key, this.orders, this.ordersBloc }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +210,7 @@ class ListViewOrders extends StatelessWidget {
                 Divider(height: 5.0),
                 ListTile(
                   title: Text('${orders[position].dogName}'),
-                  onTap: () => _onTapItem(context, orders[position])
+                  onTap: () => ordersBloc.onTapItem(orders[position])
                 ),
               ],
             );

@@ -30,7 +30,6 @@ class AuthStateProvider {
 
   Future<String> getMobileToken() async {
     final SharedPreferences prefs = await _prefs;
-
     return prefs.getString("token") ?? '';
   }
 

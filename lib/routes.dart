@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:doggie_tag_list/tag_info.dart';
-import 'package:doggie_tag_list/home.dart';
-import 'package:doggie_tag_list/orders.dart';
+import 'orders/orders.dart';
+import 'login/login_page.dart';
+import 'tag_info/tag_info.dart';
 
 final routes = {
-  '/orders': (BuildContext context) => new Orders(),
-  '/login': (BuildContext context) => new Home(),
-  '/tag_info': (BuildContext context) => new TagInfo(),
-  '/' : (BuildContext context) => new Home(),
+  '/orders': (BuildContext context) => new OrdersPage(),
+  '/login': (BuildContext context) => new LoginPage(),
+  '/tag_info': (BuildContext context) => new TagInfoPage()
 };
