@@ -113,6 +113,20 @@ class OrdersWidgetState extends State<OrdersPage>
         BuildContext context,
         OrdersState ordersState
       ) {
+        if (!ordersState.authenticated) {
+          _onWidgetDidBuild(() {
+            Navigator.of(context).pushReplacementNamed("/login");
+            _authBloc.onLogout();
+          });
+        }
+
+        if (_showOrder(ordersState)) {
+          _onWidgetDidBuild(() {
+            showMeASnack(_ctx, ordersState.order);
+          });
+          _ordersBloc.resetSnack();
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: Text('Orders'),
@@ -127,7 +141,7 @@ class OrdersWidgetState extends State<OrdersPage>
                 ),
                 new ListTile(
                   title: new Text('Logout'),
-                  onTap: () => _authBloc.onLogout()
+                  onTap: () => _ordersBloc.onLogout()
                 ),
               ],
             )
@@ -136,12 +150,6 @@ class OrdersWidgetState extends State<OrdersPage>
             future: _ordersBloc.getOrders(),
             builder: (BuildContext context, snapshot) {
               _ctx = context;
-              if (_showOrder(ordersState)) {
-                _onWidgetDidBuild(() {
-                  showMeASnack(_ctx, ordersState.order);
-                });
-                _ordersBloc.resetSnack();
-              }
 
               if (snapshot != null) {
                 if (snapshot.hasError) {

@@ -31,18 +31,11 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     orderSelected = order;
     dispatch(ShowOrder());
   }
-      // OrdersButtonPressed(
-      //   dogName: order.dogName,
-      //   phoneNumber: order.phoneNumber,
-      //   shippingAddress: order.shippingAddress,
-      //   contactNumber: order.contactNumber,
-      //   wood: order.wood,
-      //   design: order.design,
-      //   size: order.size
-      // )
 
-  void onSubmitSuccess() {
+  void onLogout() {
+    dispatch(LoggedOut());
   }
+
 
   Future<List <Order>> getOrders() async {
     return await _restDs.getOrders();
@@ -66,6 +59,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       } catch (error) {
         yield OrdersState.failure(error.toString());
       }
+    }
+
+    if (event is LoggedOut) {
+      yield OrdersState.unauthenticated();
     }
 
   }

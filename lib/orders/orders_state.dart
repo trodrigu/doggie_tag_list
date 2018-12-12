@@ -6,12 +6,14 @@ class OrdersState {
   final String error;
   final String token;
   final Order order;
+  final bool authenticated;
 
   const OrdersState({
     @required this.isLoading,
     @required this.error,
     @required this.token,
     @required this.order,
+    @required this.authenticated,
   });
 
   factory OrdersState.initial() {
@@ -19,7 +21,8 @@ class OrdersState {
       isLoading: false,
       error: '',
       token: '',
-      order: null
+      order: null,
+      authenticated: true
     );
   }
 
@@ -28,7 +31,8 @@ class OrdersState {
       isLoading: true,
       error: '',
       token: '',
-      order: null
+      order: null,
+      authenticated: false
     );
   }
 
@@ -37,7 +41,8 @@ class OrdersState {
       isLoading: true,
       error: '',
       token: '',
-      order: order
+      order: order,
+      authenticated: true
     );
   }
 
@@ -46,7 +51,8 @@ class OrdersState {
       isLoading: false,
       error: error,
       token: '',
-      order: null
+      order: null,
+      authenticated: true
     );
   }
 
@@ -55,7 +61,18 @@ class OrdersState {
       isLoading: false,
       error: '',
       token: '',
-      order: order
+      order: order,
+      authenticated: true
+    );
+  }
+
+  factory OrdersState.unauthenticated() {
+    return OrdersState(
+      isLoading: false,
+      error: '',
+      token: '',
+      order: null,
+      authenticated: false
     );
   }
 
@@ -71,15 +88,20 @@ class OrdersState {
           runtimeType == other.runtimeType &&
           isLoading == other.isLoading &&
           error == other.error &&
-          token == other.token;
+          token == other.token &&
+          order == other.order &&
+          authenticated == other.authenticated;
+
 
   @override
   int get hashCode =>
       isLoading.hashCode ^
       error.hashCode ^
-      token.hashCode;
+      token.hashCode ^
+      order.hashCode ^
+      authenticated.hashCode;
 
   @override
   String toString() =>
-      'OrdersState { isLoading: $isLoading, error: $error, token: $token }';
+      'OrdersState { isLoading: $isLoading, error: $error, token: $token, order: $order, authenticated: $authenticated }';
 }

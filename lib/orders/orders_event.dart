@@ -45,3 +45,5 @@ class ShowOrder extends OrdersEvent {}
 class GetOrders extends OrdersEvent {}
 
 class ResetSnack extends OrdersEvent {}
+
+class LoggedOut extends OrdersEvent {}

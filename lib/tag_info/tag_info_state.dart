@@ -72,15 +72,17 @@ class TagInfoState {
           runtimeType == other.runtimeType &&
           isLoading == other.isLoading &&
           error == other.error &&
-          order == other.order;
+          order == other.order &&
+          authenticated == other.authenticated;
 
   @override
   int get hashCode =>
       isLoading.hashCode ^
       error.hashCode ^
-      order.hashCode;
+      order.hashCode ^
+      authenticated.hashCode;
 
   @override
   String toString() =>
-      'TagInfoState { isLoading: $isLoading, error: $error, order: $order }';
+      'TagInfoState { isLoading: $isLoading, error: $error, order: $order, authenticated: $authenticated }';
 }
