@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:doggie_tag_list/authentication/authentication.dart';
 import 'package:doggie_tag_list/login/login.dart';
 import 'package:doggie_tag_list/rest_ds.dart';
-import 'package:doggie_tag_list/utils/network_util.dart';
-import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   @override

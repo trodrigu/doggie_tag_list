@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import 'package:bloc/bloc.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'app.dart';
-
 
 class SimpleBlocDelegate extends BlocDelegate {
   @override

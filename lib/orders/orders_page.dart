@@ -1,18 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:doggie_tag_list/rest_ds.dart';
 import 'package:doggie_tag_list/models/order.dart';
-import 'package:doggie_tag_list/auth.dart';
-import 'package:connectivity/connectivity.dart';
-import 'package:pref_dessert/pref_dessert.dart';
 import 'package:doggie_tag_list/authentication/authentication.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'orders.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -24,14 +16,10 @@ class OrdersPage extends StatefulWidget {
 
 class OrdersWidgetState extends State<OrdersPage>
   {
-  String _connectionStatus = 'Unknown';
-  final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult> _connectivitySubscription;
   final OrdersBloc _ordersBloc = OrdersBloc(restDs: new RestDatasource());
   final AuthenticationBloc _authBloc;
 
   BuildContext _ctx;
-  AuthStateProvider _authStateProvider;
 
   OrdersWidgetState({
     @required AuthenticationBloc authBloc
@@ -40,40 +28,6 @@ class OrdersWidgetState extends State<OrdersPage>
   @override
   void initState() {
     super.initState();
-    initConnectivity();
-    _connectivitySubscription =
-      _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-        setState(() => _connectionStatus = result.toString());
-        });
-  }
-
-  // initialize some async messages for connectivity
-  Future<Null> initConnectivity() async {
-    String connectionStatus;
-    try {
-      connectionStatus = (await _connectivity.checkConnectivity()).toString();
-    } on PlatformException catch (e) {
-      print(e.toString());
-      connectionStatus = 'Failed to get connectivity!';
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(
-      () {
-      _connectionStatus = connectionStatus;
-    });
-
-
-  }
-
-  void authOut() async {
-    Navigator.of(_ctx).pushReplacementNamed("/login");
-    _authStateProvider.rmMobileToken();
-    _authStateProvider.notify(AuthState.LOGGED_OUT);
-    _authStateProvider.disposeAll();
   }
 
   List<Order> parseOrders(String responseBody) {
@@ -172,32 +126,6 @@ class OrdersWidgetState extends State<OrdersPage>
     _ordersBloc.dispose();
     super.dispose();
   }
-}
-
-class OrderDesSer extends DesSer<Order>{
-  @override
-  Order deserialize(String s) {
-    if (s == "[]") {
-      return new Order("","","","","","","");
-    } else {
-      var split = s.split(",");
-      return new Order(split[0], 
-                      split[1],
-                      split[2],
-                      split[3],
-                      split[4],
-                      split[5],
-                      split[6]);
-    }
-  }
-
-  @override
-  String serialize(Order t) {
-    return "${t.dogName},${t.phoneNumber},${t.shippingAddress},${t.contactNumber},${t.wood},${t.design},${t.size}";
-  }
-
-  @override
-  String get key => "Order";
 }
 
 class ListViewOrders extends StatelessWidget {

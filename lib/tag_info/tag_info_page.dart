@@ -1,18 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:doggie_tag_list/rest_ds.dart';
 import 'package:doggie_tag_list/models/order.dart';
 import 'package:doggie_tag_list/auth.dart';
 import 'package:doggie_tag_list/tag_info/tag_info.dart';
-import 'package:connectivity/connectivity.dart';
-import 'package:pref_dessert/pref_dessert.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:bloc/bloc.dart';
 import 'package:doggie_tag_list/authentication/authentication.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 
 class TagInfoPage extends StatefulWidget {
   final TagInfoBloc tagInfoBloc = TagInfoBloc();
@@ -26,9 +19,6 @@ class TagInfoPageState extends State<TagInfoPage>
   implements AuthStateListener {
   final TagInfoBloc tagInfoBloc;
   final AuthenticationBloc _authBloc;
-  String _connectionStatus = 'Unknown';
-  final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
@@ -41,18 +31,11 @@ class TagInfoPageState extends State<TagInfoPage>
   String _wood;
   String _design;
   String _size;
-  BuildContext _ctx;
   AuthStateProvider _authStateProvider;
   final FocusNode _dogNameFocus = FocusNode();
   final FocusNode _phoneNumberFocus = FocusNode();
   final FocusNode _shippingAddressFocus = FocusNode();
   final FocusNode _contactNumberFocus = FocusNode();
-  final FocusNode _woodFocus = FocusNode();
-  final FocusNode _designFocus = FocusNode();
-  final FocusNode _sizeFocus = FocusNode();
-
-  bool _formWasEdited = false;
-  bool _isLoading = false;
 
   TagInfoPageState({
     @required TagInfoBloc tagInfoBloc,
@@ -65,11 +48,6 @@ class TagInfoPageState extends State<TagInfoPage>
       super.initState();
       _authStateProvider = new AuthStateProvider();
       _authStateProvider.subscribe(this);
-      initConnectivity();
-      _connectivitySubscription =
-        _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-          setState(() => _connectionStatus = result.toString());
-        });
   }
 
 
@@ -94,91 +72,11 @@ class TagInfoPageState extends State<TagInfoPage>
     }
   }
 
-  void _submitOffline(BuildContext context) {
-    final form = formKey.currentState;
-
-    if (form.validate()) {
-      form.save();
-      _performSaveOffline(context);
-      form.reset();
-      setState(() {
-        _wood = null;
-        _design = null;
-        _size = null;
-      });
-      print('yay offline');
-
-    } else {
-      print('oops offline');
-    }
-  }
-
-
-  Future<dynamic> _performSaveOffline(BuildContext context) async {
-    var repo = FuturePreferencesRepository<Order>(new OrderDesSer());
-    repo.save(Order(_dogName,_phoneNumber,_shippingAddress,_contactNumber,_wood,_design,_size));
-  }
-
-  Future<String> getOrdersList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('Orders');
-  }
-
-  Future<bool> setOrdersList(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString('Orders', value);
-  }
-
-
-  void _showSnackBar(String text, BuildContext context) {
-    Scaffold.of(_ctx).showSnackBar(SnackBar(content: new Text(text)));
-  }
-
-  @override
-  void onOrderError(String errorTxt, BuildContext context) {
-    _showSnackBar(errorTxt, context);
-    setState(() => _isLoading = false);
-  }
-
-  @override
-  void onOrderSuccess(Order order, BuildContext context) async {
-    _showSnackBar("Thank you!", context);
-    setState(() => _isLoading = false);
-  }
-
   @override
   void dispose() {
     tagInfoBloc.dispose();
     super.dispose();
   }
-
-  // initialize some async messages for connectivity
-  Future<Null> initConnectivity() async {
-    String connectionStatus;
-    try {
-      connectionStatus = (await _connectivity.checkConnectivity()).toString();
-    } on PlatformException catch (e) {
-      print(e.toString());
-      connectionStatus = 'Failed to get connectivity!';
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(
-      () {
-      _connectionStatus = connectionStatus;
-    });
-  }
-
-  void authOut() async {
-    Navigator.of(_ctx).pushReplacementNamed("/login");
-    _authStateProvider.rmMobileToken();
-    _authStateProvider.notify(AuthState.LOGGED_OUT);
-    _authStateProvider.disposeAll();
-  }
-
 
   _fieldFocusChange(BuildContext context, FocusNode from, FocusNode to){
     from.unfocus();
@@ -202,7 +100,7 @@ class TagInfoPageState extends State<TagInfoPage>
       ) {
           var submitBtn =
                     RaisedButton(
-                      onPressed: () => (_connectionStatus == 'ConnectivityResult.wifi' ? _submit() : _submitOffline(context)),
+                      onPressed: () => _submit(),
                       child: Text('Get Tag!'),
                     );
 
@@ -337,7 +235,7 @@ class TagInfoPageState extends State<TagInfoPage>
                         setState(() { _size = newValue; });
                       }
                     ),
-                    _isLoading ? new CircularProgressIndicator() : submitBtn
+                    tagInfoState.isLoading ? new CircularProgressIndicator() : submitBtn
                   ],
                 ),
               ),
@@ -349,29 +247,3 @@ class TagInfoPageState extends State<TagInfoPage>
       }
       );
 }}
-
-class OrderDesSer extends DesSer<Order>{
-  @override
-  Order deserialize(String s) {
-    if (s == "[]") {
-      return new Order("","","","","","","");
-    } else {
-      var split = s.split(",");
-      return new Order(split[0],
-                      split[1],
-                      split[2],
-                      split[3],
-                      split[4],
-                      split[5],
-                      split[6]);
-    }
-  }
-
-  @override
-  String serialize(Order t) {
-    return "${t.dogName},${t.phoneNumber},${t.shippingAddress},${t.contactNumber},${t.wood},${t.design},${t.size}";
-  }
-
-  @override
-  String get key => "Order";
-}

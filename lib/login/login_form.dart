@@ -1,7 +1,5 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:doggie_tag_list/models/user.dart';
 import 'package:doggie_tag_list/auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,7 +32,6 @@ class LoginForm extends StatefulWidget {
 class LoginFormState extends State<LoginForm>
     {
 
-  bool _isLoading = false;
   final formKey = new GlobalKey<FormState>();
   final scaffoldKey = new GlobalKey<ScaffoldState>();
   String _password, _email;
@@ -54,7 +51,6 @@ class LoginFormState extends State<LoginForm>
     final form = formKey.currentState;
 
     if (form.validate()) {
-      setState(() => _isLoading = true);
       form.save();
       _showSnackBar("Thanks for logging in!", context);
     }
@@ -171,17 +167,5 @@ class LoginFormState extends State<LoginForm>
       email: _emailController.text,
       password: _passwordController.text
     );
-  }
-
-  @override
-  void onLoginError(String errorTxt) {
-    setState(() => _isLoading = false);
-  }
-
-  @override
-  void onLoginSuccess(User user) async {
-    _authStateProvider.setMobileToken(user.token);
-    _authStateProvider.notify(AuthState.LOGGED_IN);
-    setState(() => _isLoading = false);
   }
 }
